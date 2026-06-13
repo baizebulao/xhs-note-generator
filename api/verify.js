@@ -1,36 +1,24 @@
-const codes = [
-  "XHS-AB24-0595-7A55","XHS-4D32-00AA-7376","XHS-A744-D7F0-4121","XHS-0FA6-9778-C996",
-  "XHS-9BB9-04BF-E522","XHS-1E89-CD9F-1F48","XHS-FE5C-B362-76A1","XHS-25BC-30C5-F277",
-  "XHS-7A0D-991F-F2C8","XHS-DDB5-2FCF-58A6","XHS-E2EF-BE15-6156","XHS-A70F-15CD-D4EA",
-  "XHS-0CF3-9193-AE5C","XHS-2860-1EB5-41BE","XHS-E404-A31B-7012","XHS-5C38-72A1-F6DD",
-  "XHS-C93C-6EF1-68AA","XHS-6BBF-E758-1F89","XHS-7394-FA1B-BC55","XHS-4D95-4923-B12E",
-  "XHS-6310-4D69-8D74","XHS-3487-2525-1AF7","XHS-35CC-A0DD-5226","XHS-7A09-6672-2A14",
-  "XHS-3D03-A42B-3AB7","XHS-E3B4-E952-91BB","XHS-BA56-0783-2489","XHS-F39C-FC68-49EC",
-  "XHS-03A7-4D4D-D556","XHS-9657-FBF1-CD0B","XHS-9800-E94B-6721","XHS-B609-5A30-5675",
-  "XHS-C626-8EDB-2863","XHS-8C31-5D24-C9CC","XHS-BC02-E957-8960","XHS-4609-0B1A-4C8D",
-  "XHS-E259-79DB-0188","XHS-D766-A2CD-AE45","XHS-9F2C-4241-5B61","XHS-7BEE-1E9C-273E",
-  "XHS-D3D6-2CDB-7DD2","XHS-8BE2-0FAD-21DD","XHS-FA8D-B5EC-7BD6","XHS-5C0C-BF22-CE13",
-  "XHS-DCAB-87E6-00FE","XHS-9620-FB98-2C8B","XHS-1A30-AC41-86CF","XHS-21AF-2DD4-F5C4",
-  "XHS-7B4D-6869-FB5A","XHS-AAD1-CAE2-28CB","XHS-F0C9-7F8A-D1D0","XHS-A327-792C-9960",
-  "XHS-D493-5374-E42C","XHS-37AF-F05B-920A","XHS-1C57-54AB-A4AA","XHS-649A-DBBD-604A",
-  "XHS-EDD6-1C36-95D0","XHS-8B96-D682-78B2","XHS-0B0A-C706-8E5D","XHS-A377-A758-24E0",
-  "XHS-0CEA-D2D2-7E1C","XHS-18AC-B375-2EC6","XHS-C4B3-C081-D792","XHS-CD23-BEA3-EF20",
-  "XHS-3B19-F62F-5B3C","XHS-A259-3257-A2E5","XHS-B515-CCDA-2EAF","XHS-D9CC-1C0D-66AB",
-  "XHS-9906-6F2B-80B4","XHS-3CBF-CE6C-2FD0","XHS-C7DB-3F8A-4245","XHS-E803-6AE9-AE1F",
-  "XHS-76FF-2DB3-1E16","XHS-F50D-A7E0-8CE4","XHS-FCA6-D4F4-8BE2","XHS-3F02-3359-0796",
-  "XHS-0FB9-CA31-1FF8","XHS-9CB7-A33A-45AE","XHS-C8BC-F1C0-75A1","XHS-4042-ED0D-69B9",
-  "XHS-B7D5-C814-EFD4","XHS-1C05-9F75-A00B","XHS-B906-8342-0F0A","XHS-CD9B-9F45-D72E",
-  "XHS-5D1B-0839-C699","XHS-6534-7BFD-0CE4","XHS-F93B-BF44-95D8","XHS-ED73-C5A1-9F46",
-  "XHS-FECA-6E22-DE6C","XHS-D197-E481-0814","XHS-26D0-4C36-56AC","XHS-521E-86B1-AEE4",
-  "XHS-B5A7-4AB9-4F37","XHS-F02A-37A5-C855","XHS-8A1B-DB62-3BBE","XHS-5ABF-BBC4-2F11"
-];
+import codeHashes from './code-hashes.json' with { type: 'json' };
+
+// 简易已使用记录（存内存，部署期间有效，重启清空）
+// 更好的方案是接 Vercel KV，但 Hobby 免费版用这个够初期了
+const usedCodes = new Set();
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  // 限制 CORS：只允许自己的站点
+  const allowedOrigins = [
+    'https://xhs-note-generator.vercel.app',
+    'https://xhs-note-generator-baizebulao.vercel.app'
+  ];
+  const origin = req.headers.origin;
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  res.setHeader('Vary', 'Origin');
 
   const { code } = req.body;
   if (!code) {
@@ -38,11 +26,39 @@ export default async function handler(req, res) {
   }
 
   const normalized = code.trim().toUpperCase();
-  const isValid = codes.includes(normalized);
 
-  if (isValid) {
-    return res.status(200).json({ valid: true, message: '激活成功' });
-  } else {
+  // 简单限流：同一个IP最多尝试验证5次
+  const clientIP = req.headers['x-forwarded-for']?.split(',')[0] || 'unknown';
+  const attemptKey = `verify_${clientIP}`;
+  if (!globalThis._verifyAttempts) globalThis._verifyAttempts = {};
+  if (!globalThis._verifyAttempts[attemptKey]) {
+    globalThis._verifyAttempts[attemptKey] = { count: 0, resetAt: Date.now() + 3600000 };
+  }
+  const attempts = globalThis._verifyAttempts[attemptKey];
+  if (attempts.count >= 10) {
+    return res.status(429).json({ valid: false, error: '尝试次数过多，请1小时后再试' });
+  }
+  attempts.count++;
+
+  // 验证：SHA-256 比对
+  const crypto = await import('crypto');
+  const hash = crypto.createHash('sha256').update(normalized).digest('hex');
+  const isValid = codeHashes.hashes.includes(hash);
+
+  if (!isValid) {
     return res.status(200).json({ valid: false, error: '激活码无效' });
   }
+
+  // 检查是否已使用（内存级别，重启后重置）
+  if (usedCodes.has(normalized)) {
+    return res.status(200).json({ 
+      valid: false, 
+      error: '该激活码已被使用，如需帮助请联系客服' 
+    });
+  }
+
+  // 标记为已使用
+  usedCodes.add(normalized);
+
+  return res.status(200).json({ valid: true, message: '激活成功' });
 }

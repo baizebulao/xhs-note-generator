@@ -5,7 +5,33 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  // CORS：只允许自己的站点
+  const allowedOrigins = [
+    'https://xhs-note-generator.vercel.app',
+    'https://xhs-note-generator-baizebulao.vercel.app'
+  ];
+  const origin = req.headers.origin;
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  res.setHeader('Vary', 'Origin');
+
+  // 限流：同一IP每小时最多20次生成
+  const clientIP = req.headers['x-forwarded-for']?.split(',')[0] || 'unknown';
+  const rateKey = `rate_${clientIP}`;
+  if (!globalThis._rateLimit) globalThis._rateLimit = {};
+  if (!globalThis._rateLimit[rateKey]) {
+    globalThis._rateLimit[rateKey] = { count: 0, resetAt: Date.now() + 3600000 };
+  }
+  const rl = globalThis._rateLimit[rateKey];
+  if (Date.now() > rl.resetAt) {
+    rl.count = 0;
+    rl.resetAt = Date.now() + 3600000;
+  }
+  if (rl.count >= 20) {
+    return res.status(429).json({ error: '请求过于频繁，请稍后再试' });
+  }
+  rl.count++;
 
   const apiKey = process.env.ZHIPU_API_KEY;
   if (!apiKey) {
@@ -17,6 +43,11 @@ export default async function handler(req, res) {
 
     if (!keyword || !audience) {
       return res.status(400).json({ error: '缺少必填参数' });
+    }
+
+    // 输入长度限制，防止滥用
+    if (keyword.length > 200 || audience.length > 200) {
+      return res.status(400).json({ error: '输入内容过长' });
     }
 
     const styleGuide = {
@@ -58,11 +89,11 @@ export default async function handler(req, res) {
 }
 
 要求：
-- 标题要有网感和吸引力，让人忍不住点进来，可以参考"被xxx惊艳到""xxx也太绝了吧""后悔没早点知道"等爆款句式
+- 标题要有网感和吸引力，让人忍不住点进来
 - 正文开头要用一句金句或共鸣的话抓住读者
 - 适当使用"姐妹们""绝绝子""冲""YYDS"等小红书常用表达但不要过度
 - 标签要包含热门词和长尾词混合，8个左右
-- 整体风格要像真人写的，不要像AI生成的，加入真实的感受和细节`;
+- 整体风格要像真人写的，不要像AI生成的`;
 
     const response = await fetch(ZHIPU_URL, {
       method: 'POST',
