@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小红书笔记AI生成器 · 效果对比展示</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    background: linear-gradient(135deg, #fff0f5 0%, #fff5f7 50%, #f0f0ff 100%);
+    min-height: 100vh;
+    padding: 40px 20px;
+    color: #333;
+  }
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 36px;
+  }
+  .header h1 {
+    font-size: 32px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #ff2442 0%, #ff6b9d 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 10px;
+  }
+  .header p {
+    font-size: 15px;
+    color: #888;
+  }
+  .badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #ff2442, #ff6b9d);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 5px 16px;
+    border-radius: 20px;
+    margin-bottom: 14px;
+  }
+  /* VS Banner */
+  .vs-banner {
+    text-align: center;
+    margin-bottom: 24px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #999;
+    letter-spacing: 4px;
+  }
+  .vs-banner span {
+    display: inline-block;
+    background: #fff;
+    padding: 6px 20px;
+    border-radius: 30px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    margin: 0 8px;
+  }
+  /* Comparison */
+  .comparison {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 32px;
+  }
+  @media (max-width: 700px) {
+    .comparison { grid-template-columns: 1fr; }
+    .header h1 { font-size: 24px; }
+  }
+  /* Card */
+  .card {
+    background: #fff;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 4px 30px rgba(0,0,0,0.08);
+    position: relative;
+  }
+  .card.bad {
+    border: 2px solid #e0e0e0;
+  }
+  .card.good {
+    border: 2px solid #ff2442;
+    box-shadow: 0 4px 30px rgba(255, 36, 66, 0.15);
+  }
+  /* Card Label */
+  .card-label {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 10;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 5px 14px;
+    border-radius: 16px;
+  }
+  .card-label.before {
+    background: #f0f0f0;
+    color: #999;
+  }
+  .card-label.after {
+    background: linear-gradient(135deg, #ff2442, #ff6b9d);
+    color: #fff;
+  }
+  /* Card Header */
+  .card-header {
+    padding: 18px 20px 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .avatar.bad { background: #e8e8e8; }
+  .avatar.good { background: linear-gradient(135deg, #ffe0ec, #ffd4e5); }
+  .username {
+    font-size: 14px;
+    font-weight: 600;
+  }
+  /* Card Image */
+  .card-image {
+    width: 100%;
+    height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 60px;
+    position: relative;
+  }
+  .card-image.bad { background: #f5f5f5; }
+  .card-image.good { background: linear-gradient(135deg, #fff0f5, #ffe0ec); }
+  .card-image .tag-overlay {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(0,0,0,0.5);
+    color: #fff;
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 12px;
+  }
+  /* Card Body */
+  .card-body {
+    padding: 14px 20px 8px;
+  }
+  .card-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    line-height: 1.5;
+  }
+  .card-title.bad { color: #555; }
+  .card-title.good { color: #222; }
+  .card-content {
+    font-size: 13px;
+    line-height: 1.8;
+    color: #666;
+    margin-bottom: 12px;
+  }
+  .card-content.good { color: #555; }
+  .card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .card-tags .tag {
+    font-size: 11px;
+    color: #4a90d9;
+    background: #f0f6ff;
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+  .card-tags .tag.empty {
+    color: #ccc;
+    background: #f9f9f9;
+    text-decoration: line-through;
+  }
+  /* Card Footer */
+  .card-footer {
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 20px 16px;
+    border-top: 1px solid #f5f5f5;
+  }
+  .stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+  .stat-icon { font-size: 16px; }
+  .stat-num {
+    font-size: 12px;
+    font-weight: 600;
+    color: #888;
+  }
+  .stat-num.low { color: #ccc; }
+  .stat-num.high { color: #ff2442; }
+  /* CTA Section */
+  .cta {
+    background: #fff;
+    border-radius: 20px;
+    padding: 36px 30px;
+    text-align: center;
+    box-shadow: 0 4px 30px rgba(0,0,0,0.06);
+    margin-top: 20px;
+  }
+  .cta h2 {
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 8px;
+    color: #222;
+  }
+  .cta .sub {
+    font-size: 14px;
+    color: #888;
+    margin-bottom: 24px;
+  }
+  .cta-features {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+  .feature-pill {
+    background: #fff5f7;
+    color: #ff2442;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 7px 16px;
+    border-radius: 20px;
+    border: 1px solid #ffe0ec;
+  }
+  .cta-button {
+    display: inline-block;
+    background: linear-gradient(135deg, #ff2442 0%, #ff6b9d 100%);
+    color: #fff;
+    text-decoration: none;
+    font-size: 18px;
+    font-weight: 700;
+    padding: 14px 48px;
+    border-radius: 30px;
+    box-shadow: 0 6px 20px rgba(255, 36, 66, 0.3);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .cta-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(255, 36, 66, 0.4);
+  }
+  .price-tag {
+    margin-top: 16px;
+    font-size: 14px;
+    color: #999;
+  }
+  .price-tag strong {
+    color: #ff2442;
+    font-size: 20px;
+  }
+  /* Input Demo */
+  .input-demo {
+    background: #fff;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    text-align: center;
+  }
+  .input-demo-label {
+    font-size: 13px;
+    color: #888;
+    margin-bottom: 12px;
+  }
+  .input-bar {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #f5f5f5;
+    border-radius: 12px;
+    padding: 10px 20px;
+    margin-bottom: 8px;
+  }
+  .input-bar .prompt-icon { font-size: 18px; }
+  .input-bar .keyword {
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+  }
+  .input-bar .cursor {
+    display: inline-block;
+    width: 2px;
+    height: 16px;
+    background: #ff2442;
+    animation: blink 1s infinite;
+  }
+  @keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+  }
+  .arrow-down {
+    font-size: 24px;
+    color: #ff2442;
+    margin: 4px 0;
+  }
+  .output-label {
+    font-size: 12px;
+    color: #ff2442;
+    font-weight: 600;
+  }
+  /* Footer */
+  .footer {
+    text-align: center;
+    margin-top: 32px;
+    font-size: 12px;
+    color: #ccc;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="badge">🔥 AI小红书笔记生成器</div>
+    <h1>手写笔记 vs AI生成笔记</h1>
+    <p>同一个关键词「平价面霜」，效果差距一目了然</p>
+  </div>
+
+  <!-- Input Demo -->
+  <div class="input-demo">
+    <div class="input-demo-label">只需输入一个关键词 👇</div>
+    <div class="input-bar">
+      <span class="prompt-icon">🔑</span>
+      <span class="keyword">平价面霜</span>
+      <span class="cursor"></span>
+    </div>
+    <div class="arrow-down">⬇️</div>
+    <div class="output-label">AI 自动生成标题 + 正文 + 标签 ✨</div>
+  </div>
+
+  <!-- VS Banner -->
+  <div class="vs-banner">
+    <span>✏️ 普通手写</span>
+    <span>🆚</span>
+    <span>🤖 AI生成</span>
+  </div>
+
+  <!-- Comparison -->
+  <div class="comparison">
+
+    <!-- BEFORE: 手写笔记 -->
+    <div class="card bad">
+      <div class="card-label before">改之前</div>
+      <div class="card-header">
+        <div class="avatar bad">😣</div>
+        <div>
+          <div class="username">某新手博主</div>
+        </div>
+      </div>
+      <div class="card-image bad">
+        📷
+        <div class="tag-overlay">随手拍的图</div>
+      </div>
+      <div class="card-body">
+        <div class="card-title bad">推荐几款平价面霜</div>
+        <div class="card-content">
+          最近买了几款面霜，给大家推荐一下。第一款是某某牌的，保湿效果不错，价格也不贵。第二款是另一个牌子的，用起来也挺舒服的。大家可以根据自己的需求选择，希望对你们有帮助。
+        </div>
+        <div class="card-tags">
+          <span class="tag empty">#面霜</span>
+          <span class="tag empty">#护肤</span>
+          <span class="tag empty">#推荐</span>
+        </div>
+      </div>
+      <div class="card-footer">
+        <div class="stat">
+          <span class="stat-icon">❤️</span>
+          <span class="stat-num low">23</span>
+        </div>
+        <div class="stat">
+          <span class="stat-icon">💬</span>
+          <span class="stat-num low">2</span>
+        </div>
+        <div class="stat">
+          <span class="stat-icon">⭐</span>
+          <span class="stat-num low">5</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- AFTER: AI生成笔记 -->
+    <div class="card good">
+      <div class="card-label after">AI生成 ✨</div>
+      <div class="card-header">
+        <div class="avatar good">✨</div>
+        <div>
+          <div class="username">AI笔记生成器</div>
+        </div>
+      </div>
+      <div class="card-image good">
+        🎨
+        <div class="tag-overlay">种草风格 · 自动排版</div>
+      </div>
+      <div class="card-body">
+        <div class="card-title good">💰学生党必看！5款平价面霜测评，百元内买到千元肤感！</div>
+        <div class="card-content good">
+          姐妹们！！谁说平价面霜就不能好用了？😡<br>
+          我花了半个月把市面上热门的平价面霜都试了一遍<br>
+          今天把真正好用的5款整理出来分享给你们👇<br><br>
+          ✨ No.1 某某牌保湿面霜（¥59）<br>
+          干皮亲妈！上脸不油腻 一整天都很水润<br><br>
+          ✨ No.2 某某牌修护面霜（¥79）<br>
+          敏感肌放心入 质地像奶油一样 巨舒服<br><br>
+          💡 总结：学生党闭眼入第1款 想要修护选第2款<br>
+          你们用过哪款？评论区聊聊～
+        </div>
+        <div class="card-tags">
+          <span class="tag">#平价面霜推荐</span>
+          <span class="tag">#学生党护肤</span>
+          <span class="tag">#面霜测评</span>
+          <span class="tag">#护肤好物</span>
+          <span class="tag">#百元护肤</span>
+          <span class="tag">#干皮护肤</span>
+        </div>
+      </div>
+      <div class="card-footer">
+        <div class="stat">
+          <span class="stat-icon">❤️</span>
+          <span class="stat-num high">2.3w</span>
+        </div>
+        <div class="stat">
+          <span class="stat-icon">💬</span>
+          <span class="stat-num high">856</span>
+        </div>
+        <div class="stat">
+          <span class="stat-icon">⭐</span>
+          <span class="stat-num high">4300</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CTA -->
+  <div class="cta">
+    <h2>你也想写出这样的笔记吗？</h2>
+    <p class="sub">输入关键词，3秒生成一篇完整的小红书笔记</p>
+    <div class="cta-features">
+      <span class="feature-pill">🌱 种草风格</span>
+      <span class="feature-pill">📚 教程风格</span>
+      <span class="feature-pill">💬 分享风格</span>
+      <span class="feature-pill">🔍 测评风格</span>
+      <span class="feature-pill">🏷️ 自动标签</span>
+      <span class="feature-pill">✅ 标题优化</span>
+    </div>
+    <a href="https://xhs-note-generator.vercel.app/" class="cta-button">🚀 立即免费试用</a>
+    <div class="price-tag">
+      免费试用1次 · 永久解锁仅 <strong>¥9.9</strong>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    小红书笔记AI生成器 · https://xhs-note-generator.vercel.app/<br>
+    截图此页面可直接用于发帖分享
+  </div>
+
+</div>
+</body>
+</html>

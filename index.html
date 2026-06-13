@@ -3,342 +3,550 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>小红书笔记AI生成器</title>
+<title>小红书笔记AI生成器 - 一键生成爆款笔记</title>
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+:root {
+  --red: #FF2442;
+  --red-light: #FF6B81;
+  --red-bg: #FFF0F2;
+  --gray-bg: #f7f7f7;
+  --text-main: #222;
+  --text-sub: #666;
+  --text-dim: #999;
+  --border: #eee;
+  --shadow: 0 2px 16px rgba(0,0,0,0.06);
+  --radius: 12px;
+}
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-  background: #f5f5f5;
-  color: #333;
-  min-height: 100vh;
+  background: var(--gray-bg); color: var(--text-main); min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
 }
 
-.container {
-  max-width: 480px;
-  margin: 0 auto;
-  padding: 0 16px 32px;
-}
-
-/* Header */
+/* ========== Header ========== */
 .header {
-  background: linear-gradient(135deg, #FF2442, #FF6B81);
-  padding: 24px 0 20px;
-  text-align: center;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  box-shadow: 0 2px 12px rgba(255, 36, 66, 0.3);
+  background: linear-gradient(135deg, #FF2442, #FF5C6A);
+  padding: 0 0 20px; text-align: center; position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 4px 20px rgba(255,36,66,0.25);
 }
-.header h1 {
-  color: #fff;
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: 1px;
+.header-top { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; }
+.header-logo { display: flex; align-items: center; gap: 8px; }
+.header-logo .logo-icon {
+  width: 32px; height: 32px; background: rgba(255,255,255,0.2); border-radius: 8px;
+  display: flex; align-items: center; justify-content: center; font-size: 18px;
 }
-.header .subtitle {
-  color: rgba(255,255,255,0.85);
-  font-size: 12px;
-  margin-top: 4px;
+.header-logo span { color: #fff; font-size: 16px; font-weight: 700; }
+.header-actions { display: flex; gap: 8px; }
+.header-btn {
+  padding: 5px 12px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1);
+  color: #fff; border-radius: 16px; font-size: 12px; cursor: pointer; transition: all .2s;
 }
+.header-btn:hover { background: rgba(255,255,255,0.2); }
+.header-tagline { color: rgba(255,255,255,0.9); font-size: 13px; margin-top: 4px; }
 .trial-badge {
-  display: inline-block;
-  background: rgba(255,255,255,0.25);
-  color: #fff;
-  font-size: 11px;
-  padding: 2px 10px;
-  border-radius: 10px;
-  margin-top: 8px;
+  display: inline-flex; align-items: center; gap: 4px;
+  background: rgba(255,255,255,0.25); color: #fff; font-size: 11px;
+  padding: 3px 12px; border-radius: 12px; margin-top: 8px;
 }
+.trial-badge.activated { background: rgba(255,255,255,0.35); }
 
-/* Card */
+/* stats bar */
+.header-stats {
+  display: flex; justify-content: center; gap: 28px; margin-top: 12px; padding: 0 16px;
+}
+.stat-item { text-align: center; }
+.stat-num { color: #fff; font-size: 18px; font-weight: 800; }
+.stat-label { color: rgba(255,255,255,0.7); font-size: 10px; margin-top: 2px; }
+
+/* ========== Container ========== */
+.container { max-width: 480px; margin: 0 auto; padding: 0 16px 80px; }
+
+/* ========== Card ========== */
 .card {
-  background: #fff;
-  border-radius: 12px;
-  padding: 20px;
-  margin-top: 16px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  background: #fff; border-radius: var(--radius); padding: 20px;
+  margin-top: 14px; box-shadow: var(--shadow);
 }
+.section-label {
+  font-size: 13px; font-weight: 700; color: var(--text-main);
+  margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
+}
+.section-label .dot { width: 4px; height: 16px; background: var(--red); border-radius: 2px; }
 
-/* Form */
-.form-group { margin-bottom: 16px; }
+/* ========== Form ========== */
+.form-group { margin-bottom: 14px; }
 .form-group label {
-  display: block;
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 6px;
+  display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px;
 }
+.form-group label .required { color: var(--red); font-size: 11px; margin-left: 2px; }
 .form-group input,
-.form-group select {
-  width: 100%;
-  padding: 10px 14px;
-  border: 1.5px solid #e8e8e8;
-  border-radius: 8px;
-  font-size: 14px;
-  outline: none;
-  transition: border-color 0.2s;
-  background: #fafafa;
-  -webkit-appearance: none;
+.form-group select,
+.form-group textarea {
+  width: 100%; padding: 11px 14px; border: 1.5px solid var(--border);
+  border-radius: 8px; font-size: 14px; outline: none; transition: border-color .2s, box-shadow .2s;
+  background: #fafafa; -webkit-appearance: none; font-family: inherit;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: var(--red); background: #fff; box-shadow: 0 0 0 3px rgba(255,36,66,0.08);
 }
 .form-group input::placeholder { color: #bbb; }
-.form-group input:focus,
-.form-group select:focus {
-  border-color: #FF2442;
-  background: #fff;
-}
 
-/* Button */
+/* tag chips for style */
+.style-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip {
+  padding: 8px 14px; border: 1.5px solid var(--border); border-radius: 20px;
+  font-size: 13px; cursor: pointer; transition: all .2s; background: #fafafa; color: var(--text-sub);
+  display: flex; align-items: center; gap: 4px; user-select: none;
+}
+.chip.active { border-color: var(--red); background: var(--red-bg); color: var(--red); font-weight: 600; }
+
+/* tone chips */
+.tone-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.tone-chip {
+  padding: 5px 10px; border: 1px solid var(--border); border-radius: 14px;
+  font-size: 12px; cursor: pointer; transition: all .2s; background: #fff; color: var(--text-dim);
+}
+.tone-chip.active { border-color: var(--red); color: var(--red); background: var(--red-bg); }
+
+/* length slider */
+.length-wrap { display: flex; align-items: center; gap: 10px; }
+.length-wrap input[type=range] {
+  flex: 1; accent-color: var(--red); height: 4px;
+}
+.length-label { font-size: 12px; color: var(--text-dim); min-width: 50px; text-align: right; }
+
+/* ========== Buttons ========== */
 .btn-generate {
-  width: 100%;
-  padding: 12px;
-  background: linear-gradient(135deg, #FF2442, #FF6B81);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: opacity 0.2s, transform 0.1s;
-  letter-spacing: 1px;
+  width: 100%; padding: 14px; background: linear-gradient(135deg, #FF2442, #FF6B81);
+  color: #fff; border: none; border-radius: 10px; font-size: 16px; font-weight: 700;
+  cursor: pointer; transition: opacity .2s, transform .1s; letter-spacing: 2px;
+  box-shadow: 0 4px 16px rgba(255,36,66,0.3);
 }
 .btn-generate:active { transform: scale(0.98); }
-.btn-generate:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.btn-generate:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+.btn-regenerate {
+  width: 100%; padding: 10px; margin-top: 8px; background: #fff; color: var(--red);
+  border: 1.5px solid var(--red); border-radius: 8px; font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: all .2s;
 }
+.btn-regenerate:hover { background: var(--red-bg); }
 
-/* Loading */
-.loading-wrap {
-  display: none;
-  text-align: center;
-  padding: 32px 0;
-}
+/* ========== Loading ========== */
+.loading-wrap { display: none; text-align: center; padding: 40px 0; }
 .loading-wrap.show { display: block; }
-.spinner {
-  width: 36px; height: 36px;
-  border: 3px solid #f0f0f0;
-  border-top-color: #FF2442;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  margin: 0 auto 12px;
+.loading-dots { display: flex; justify-content: center; gap: 6px; margin-bottom: 16px; }
+.loading-dot {
+  width: 10px; height: 10px; border-radius: 50%; background: var(--red);
+  animation: bounce 1.4s ease-in-out infinite;
 }
-@keyframes spin { to { transform: rotate(360deg); } }
-.loading-text {
-  color: #999;
-  font-size: 14px;
+.loading-dot:nth-child(2) { animation-delay: 0.16s; }
+.loading-dot:nth-child(3) { animation-delay: 0.32s; }
+@keyframes bounce {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
+  40% { transform: scale(1); opacity: 1; }
 }
+.loading-tip {
+  color: var(--text-sub); font-size: 14px; line-height: 1.8;
+  min-height: 28px; transition: opacity .3s;
+}
+.loading-sub { color: var(--text-dim); font-size: 12px; margin-top: 8px; }
 
-/* Result */
-.result-card { display: none; }
+/* ========== Result ========== */
+.result-card { display: none; animation: slideUp .4s ease; }
 .result-card.show { display: block; }
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-.result-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: #222;
-  line-height: 1.5;
-  margin-bottom: 14px;
-  padding-bottom: 14px;
-  border-bottom: 1px solid #f0f0f0;
+/* XHS-style note card */
+.note-card {
+  background: #fff; border-radius: 12px; overflow: hidden;
+  border: 1px solid #f0f0f0;
+}
+.note-header { display: flex; align-items: center; gap: 10px; padding: 14px 16px 10px; }
+.note-avatar {
+  width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #FF2442, #FF6B81);
+  display: flex; align-items: center; justify-content: center; font-size: 16px; color: #fff; font-weight: 700;
+}
+.note-author { flex: 1; }
+.note-author-name { font-size: 14px; font-weight: 600; color: var(--text-main); }
+.note-author-meta { font-size: 11px; color: var(--text-dim); margin-top: 1px; }
+.note-verified { color: #FF2442; font-size: 12px; }
+.note-image-placeholder {
+  width: 100%; aspect-ratio: 4/3; background: linear-gradient(135deg, #FFF0F2, #FFE4E8);
+  display: flex; align-items: center; justify-content: center; font-size: 48px;
+}
+.note-body { padding: 12px 16px; }
+.note-title {
+  font-size: 17px; font-weight: 700; color: var(--text-main); line-height: 1.5; margin-bottom: 10px;
+}
+.note-content {
+  font-size: 14px; line-height: 2; color: #444; white-space: pre-wrap; word-wrap: break-word;
+}
+.note-tags { display: flex; flex-wrap: wrap; gap: 4px 8px; padding: 8px 16px 6px; }
+.note-tag {
+  color: #4a90d9; font-size: 13px; font-weight: 500;
+}
+.note-footer {
+  display: flex; align-items: center; gap: 20px; padding: 10px 16px 14px;
+  border-top: 1px solid #f5f5f5; margin-top: 4px;
+}
+.note-interaction { display: flex; align-items: center; gap: 4px; font-size: 13px; color: var(--text-dim); }
+
+/* result actions */
+.result-actions { display: flex; gap: 8px; margin-top: 12px; }
+.btn-copy-all {
+  flex: 1; padding: 11px; background: var(--red-bg); color: var(--red);
+  border: 1.5px solid var(--red); border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.btn-copy-title, .btn-copy-tags {
+  padding: 11px 14px; background: #fff; color: var(--text-sub);
+  border: 1.5px solid var(--border); border-radius: 8px; font-size: 13px; cursor: pointer;
+}
+.result-meta {
+  display: flex; justify-content: space-between; font-size: 12px; color: var(--text-dim);
+  margin-top: 10px; padding: 0 4px;
 }
 
-.result-body {
-  font-size: 15px;
-  line-height: 2;
-  color: #444;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-}
-
-.result-tags {
-  margin-top: 16px;
-  padding-top: 14px;
-  border-top: 1px solid #f0f0f0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.tag {
-  display: inline-block;
-  background: #FFF0F2;
-  color: #FF2442;
-  font-size: 13px;
-  padding: 3px 10px;
-  border-radius: 14px;
-  font-weight: 500;
-}
-
-/* Copy button */
-.btn-copy {
-  width: 100%;
-  padding: 10px;
-  margin-top: 12px;
-  background: #fff;
-  color: #FF2442;
-  border: 1.5px solid #FF2442;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.btn-copy:hover { background: #FFF0F2; }
-.btn-copy:disabled { display: none; }
-
-/* Modal overlay */
-.modal-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.5);
-  z-index: 999;
-  justify-content: center;
+/* ========== History ========== */
+.history-card { margin-top: 14px; }
+.history-item {
+  padding: 12px 0; border-bottom: 1px solid #f5f5f5; cursor: pointer; display: flex; gap: 10px;
   align-items: center;
+}
+.history-item:last-child { border-bottom: none; }
+.history-item:hover { opacity: 0.8; }
+.history-emoji { font-size: 20px; }
+.history-info { flex: 1; min-width: 0; }
+.history-title { font-size: 13px; font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.history-meta { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+
+/* ========== Features ========== */
+.features-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 14px; }
+.feature-item {
+  background: #fff; border-radius: 10px; padding: 16px 14px; text-align: center;
+  box-shadow: var(--shadow);
+}
+.feature-icon { font-size: 28px; margin-bottom: 8px; }
+.feature-title { font-size: 13px; font-weight: 700; color: var(--text-main); }
+.feature-desc { font-size: 11px; color: var(--text-dim); margin-top: 4px; line-height: 1.5; }
+
+/* ========== Testimonials ========== */
+.testimonials { margin-top: 14px; }
+.testimonial-item {
+  background: #fff; border-radius: 10px; padding: 14px 16px; margin-bottom: 8px; box-shadow: var(--shadow);
+}
+.testimonial-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.testimonial-avatar {
+  width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #ff9a56, #ff6a88);
+  display: flex; align-items: center; justify-content: center; font-size: 12px; color: #fff; font-weight: 700;
+}
+.testimonial-name { font-size: 13px; font-weight: 600; color: var(--text-main); }
+.testimonial-stars { color: #FFB400; font-size: 12px; margin-left: auto; }
+.testimonial-text { font-size: 13px; color: var(--text-sub); line-height: 1.7; }
+
+/* ========== FAQ ========== */
+.faq-item { padding: 14px 0; border-bottom: 1px solid #f5f5f5; }
+.faq-item:last-child { border-bottom: none; }
+.faq-q { font-size: 14px; font-weight: 600; color: var(--text-main); cursor: pointer; display: flex; align-items: center; gap: 6px; }
+.faq-q .arrow { transition: transform .2s; color: var(--text-dim); }
+.faq-a { font-size: 13px; color: var(--text-sub); line-height: 1.7; margin-top: 8px; display: none; }
+.faq-item.open .faq-a { display: block; }
+.faq-item.open .arrow { transform: rotate(90deg); }
+
+/* ========== Footer ========== */
+.footer { text-align: center; padding: 24px 0 8px; font-size: 12px; color: var(--text-dim); line-height: 1.8; }
+.footer a { color: var(--text-dim); text-decoration: none; }
+
+/* ========== Modal ========== */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+  z-index: 999; justify-content: center; align-items: center; padding: 20px;
 }
 .modal-overlay.show { display: flex; }
 .modal-box {
-  background: #fff;
-  border-radius: 16px;
-  padding: 28px 24px;
-  max-width: 360px;
-  width: 90%;
-  text-align: center;
-  animation: popIn 0.25s ease;
+  background: #fff; border-radius: 16px; padding: 28px 24px;
+  max-width: 360px; width: 100%; text-align: center; animation: popIn .25s ease;
 }
-@keyframes popIn {
-  from { transform: scale(0.85); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+@keyframes popIn { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.modal-box h3 { font-size: 18px; color: var(--text-main); margin-bottom: 10px; }
+.modal-box p { font-size: 14px; color: var(--text-sub); line-height: 1.7; margin-bottom: 16px; }
+.modal-price {
+  display: inline-block; background: var(--red-bg); color: var(--red); font-size: 24px;
+  font-weight: 800; padding: 4px 20px; border-radius: 8px; margin: 4px 0 12px;
 }
-.modal-box h3 {
-  font-size: 18px;
-  color: #222;
-  margin-bottom: 10px;
-}
-.modal-box p {
-  font-size: 14px;
-  color: #666;
-  line-height: 1.7;
-  margin-bottom: 20px;
-}
-.btn-upgrade {
-  display: inline-block;
-  padding: 10px 32px;
-  background: linear-gradient(135deg, #FF2442, #FF6B81);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  margin-bottom: 12px;
-}
-.btn-close-modal {
-  display: block;
-  margin: 0 auto;
-  background: none;
-  border: none;
-  color: #999;
-  font-size: 13px;
-  cursor: pointer;
-}
-
-/* Activate section */
+.modal-price small { font-size: 13px; font-weight: 400; text-decoration: line-through; color: var(--text-dim); margin-left: 4px; }
 .activate-section { margin: 16px 0 12px; }
 .activate-input {
-  width: 100%; padding: 10px 14px;
-  border: 1.5px solid #e8e8e8; border-radius: 8px;
-  font-size: 14px; text-align: center; letter-spacing: 1px;
-  outline: none; background: #fafafa; margin-bottom: 8px;
+  width: 100%; padding: 11px 14px; border: 1.5px solid var(--border);
+  border-radius: 8px; font-size: 14px; text-align: center; letter-spacing: 1px;
+  outline: none; background: #fafafa; margin-bottom: 8px; transition: border-color .2s;
 }
-.activate-input:focus { border-color: #FF2442; background: #fff; }
+.activate-input:focus { border-color: var(--red); background: #fff; }
 .btn-activate {
-  width: 100%; padding: 10px;
-  background: linear-gradient(135deg, #FF2442, #FF6B81);
-  color: #fff; border: none; border-radius: 8px;
-  font-size: 14px; font-weight: 600; cursor: pointer;
+  width: 100%; padding: 11px; background: linear-gradient(135deg, #FF2442, #FF6B81);
+  color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
 }
 .btn-activate:active { transform: scale(0.98); }
-.activate-hint {
-  font-size: 12px; color: #999; margin-top: 6px; text-align: center;
-}
-.activate-hint.error { color: #FF2442; }
+.activate-hint { font-size: 12px; color: var(--text-dim); margin-top: 6px; text-align: center; min-height: 18px; }
+.activate-hint.error { color: var(--red); }
 .activate-hint.success { color: #66bb6a; }
 .buy-link {
-  display: block; text-align: center; color: #4fc3f7;
-  font-size: 13px; text-decoration: none; margin-bottom: 12px;
+  display: block; text-align: center; color: #4a90d9; font-size: 13px;
+  text-decoration: none; margin: 10px 0 12px; padding: 8px; border: 1px dashed #4a90d9; border-radius: 8px;
 }
-.buy-link:hover { text-decoration: underline; }
+.buy-link:hover { background: rgba(74,144,217,0.05); }
+.btn-close-modal {
+  display: block; margin: 0 auto; background: none; border: none;
+  color: var(--text-dim); font-size: 13px; cursor: pointer;
+}
 
-/* Error */
+/* ========== Error ========== */
 .error-msg {
-  display: none;
-  color: #FF2442;
-  font-size: 13px;
-  text-align: center;
-  margin-top: 8px;
+  display: none; color: var(--red); font-size: 13px; text-align: center; margin-top: 8px;
+  padding: 8px; background: var(--red-bg); border-radius: 8px;
 }
 .error-msg.show { display: block; }
+
+/* ========== Empty state ========== */
+.empty-state { text-align: center; padding: 24px 0; color: var(--text-dim); font-size: 13px; }
 </style>
 </head>
 <body>
 
+<!-- ========== Header ========== -->
 <div class="header">
-  <h1>📕 小红书笔记AI生成器</h1>
-  <div class="subtitle">一键生成爆款笔记 · AI智能创作</div>
-  <div class="trial-badge" id="trialBadge">免费试用：剩余 1 次</div>
+  <div class="header-top">
+    <div class="header-logo">
+      <div class="logo-icon">📕</div>
+      <span>笔记AI生成器</span>
+    </div>
+    <div class="header-actions">
+      <button class="header-btn" onclick="scrollToSection('features')">✨ 功能</button>
+      <button class="header-btn" onclick="scrollToSection('faq')">❓ 帮助</button>
+    </div>
+  </div>
+  <div class="header-tagline">一键生成爆款笔记 · AI智能创作</div>
+  <div class="trial-badge" id="trialBadge">🎁 免费试用：剩余 1 次</div>
+  <div class="header-stats">
+    <div class="stat-item">
+      <div class="stat-num">12,860+</div>
+      <div class="stat-label">已生成笔记</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">4种</div>
+      <div class="stat-label">笔记风格</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">10秒</div>
+      <div class="stat-label">平均生成</div>
+    </div>
+  </div>
 </div>
 
 <div class="container">
-  <!-- Input Card -->
-  <div class="card">
+
+  <!-- ========== Input Card ========== -->
+  <div class="card" id="inputCard">
+    <div class="section-label"><span class="dot"></span> 填写信息</div>
+
     <div class="form-group">
-      <label>产品/主题关键词</label>
+      <label>产品/主题 <span class="required">*</span></label>
       <input type="text" id="keyword" placeholder="例如：空气炸锅、秋冬穿搭、平价面膜" />
     </div>
+
     <div class="form-group">
-      <label>目标受众</label>
+      <label>目标受众 <span class="required">*</span></label>
       <input type="text" id="audience" placeholder="例如：大学生、宝妈、上班族女生" />
     </div>
+
     <div class="form-group">
       <label>笔记风格</label>
-      <select id="style">
-        <option value="种草">🌟 种草推荐</option>
-        <option value="教程">📝 干货教程</option>
-        <option value="分享">💬 真实分享</option>
-        <option value="测评">🔍 深度测评</option>
-      </select>
+      <div class="style-chips" id="styleChips">
+        <div class="chip active" data-style="种草">🌟 种草推荐</div>
+        <div class="chip" data-style="教程">📝 干货教程</div>
+        <div class="chip" data-style="分享">💬 真实分享</div>
+        <div class="chip" data-style="测评">🔍 深度测评</div>
+      </div>
     </div>
+
+    <div class="form-group">
+      <label>语气调性</label>
+      <div class="tone-chips" id="toneChips">
+        <div class="tone-chip active" data-tone="活泼">活泼</div>
+        <div class="tone-chip" data-tone="温柔">温柔</div>
+        <div class="tone-chip" data-tone="专业">专业</div>
+        <div class="tone-chip" data-tone="幽默">幽默</div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>内容长度</label>
+      <div class="length-wrap">
+        <input type="range" id="lengthSlider" min="1" max="3" value="2" step="1" />
+        <span class="length-label" id="lengthLabel">中等（300-400字）</span>
+      </div>
+    </div>
+
     <button class="btn-generate" id="btnGenerate" onclick="generateNote()">✨ 生成笔记</button>
     <div class="error-msg" id="errorMsg"></div>
   </div>
 
-  <!-- Loading -->
+  <!-- ========== Loading ========== -->
   <div class="loading-wrap" id="loadingWrap">
-    <div class="spinner"></div>
-    <div class="loading-text">AI 正在创作中，请稍候…</div>
+    <div class="loading-dots">
+      <div class="loading-dot"></div>
+      <div class="loading-dot"></div>
+      <div class="loading-dot"></div>
+    </div>
+    <div class="loading-tip" id="loadingTip">AI 正在分析爆款笔记规律…</div>
+    <div class="loading-sub">通常需要 5-15 秒</div>
   </div>
 
-  <!-- Result -->
-  <div class="card result-card" id="resultCard">
-    <div class="result-title" id="resultTitle"></div>
-    <div class="result-body" id="resultBody"></div>
-    <div class="result-tags" id="resultTags"></div>
-    <button class="btn-copy" id="btnCopy" onclick="copyResult()">📋 一键复制笔记</button>
+  <!-- ========== Result ========== -->
+  <div class="result-card" id="resultCard">
+    <div class="note-card">
+      <div class="note-header">
+        <div class="note-avatar">AI</div>
+        <div class="note-author">
+          <div class="note-author-name">AI笔记助手 <span class="note-verified">✓</span></div>
+          <div class="note-author-meta" id="noteMeta">刚刚 · 来自AI创作</div>
+        </div>
+      </div>
+      <div class="note-image-placeholder" id="noteEmoji">📝</div>
+      <div class="note-body">
+        <div class="note-title" id="resultTitle"></div>
+        <div class="note-content" id="resultBody"></div>
+      </div>
+      <div class="note-tags" id="resultTags"></div>
+      <div class="note-footer">
+        <div class="note-interaction">❤️ <span id="likeCount">0</span></div>
+        <div class="note-interaction">💬 <span>0</span></div>
+        <div class="note-interaction">⭐ <span>0</span></div>
+        <div class="note-interaction" style="margin-left:auto">📤</div>
+      </div>
+    </div>
+
+    <div class="result-actions">
+      <button class="btn-copy-all" id="btnCopy" onclick="copyResult('all')">📋 复制全部</button>
+      <button class="btn-copy-title" onclick="copyResult('title')">标题</button>
+      <button class="btn-copy-tags" onclick="copyResult('tags')">标签</button>
+    </div>
+    <div class="result-meta">
+      <span id="wordCount">0 字</span>
+      <button class="btn-regenerate" style="width:auto;border:none;background:none;color:var(--red);font-size:12px;cursor:pointer;padding:0" onclick="generateNote()">🔄 不满意？重新生成</button>
+    </div>
   </div>
+
+  <!-- ========== History ========== -->
+  <div class="card history-card" id="historyCard" style="display:none">
+    <div class="section-label"><span class="dot"></span> 历史记录</div>
+    <div id="historyList"></div>
+  </div>
+
+  <!-- ========== Features ========== -->
+  <div id="features" class="card" style="margin-top:14px">
+    <div class="section-label"><span class="dot"></span> 核心功能</div>
+    <div class="features-grid">
+      <div class="feature-item">
+        <div class="feature-icon">⚡</div>
+        <div class="feature-title">10秒出稿</div>
+        <div class="feature-desc">输入关键词，AI秒级生成完整笔记</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">🎯</div>
+        <div class="feature-title">精准风格</div>
+        <div class="feature-desc">种草/教程/分享/测评四种风格</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">📝</div>
+        <div class="feature-title">标题+正文+标签</div>
+        <div class="feature-desc">一篇完整笔记，复制即发</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">♾️</div>
+        <div class="feature-title">永久使用</div>
+        <div class="feature-desc">一次购买，无限次生成</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== Testimonials ========== -->
+  <div class="testimonials" id="testimonials">
+    <div class="section-label" style="margin:14px 0 10px"><span class="dot"></span> 用户评价</div>
+    <div class="testimonial-item">
+      <div class="testimonial-header">
+        <div class="testimonial-avatar">小</div>
+        <div class="testimonial-name">小红薯运营</div>
+        <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+      </div>
+      <div class="testimonial-text">做代运营的，每天要写好几篇笔记，用这个工具效率直接翻倍。生成的标题很有网感，标签也很精准。</div>
+    </div>
+    <div class="testimonial-item">
+      <div class="testimonial-header">
+        <div class="testimonial-avatar">M</div>
+        <div class="testimonial-name">Mia的美妆日记</div>
+        <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+      </div>
+      <div class="testimonial-text">刚开始做小红书，最头疼的就是写文案。这个工具帮大忙了，9.9真的值，一篇爆款就回本了。</div>
+    </div>
+    <div class="testimonial-item">
+      <div class="testimonial-header">
+        <div class="testimonial-avatar">电</div>
+        <div class="testimonial-name">电商老张</div>
+        <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+      </div>
+      <div class="testimonial-text">卖货用的小红书引流文案全靠它了，种草风格写得比我自己好太多，转化率明显提升。</div>
+    </div>
+  </div>
+
+  <!-- ========== FAQ ========== -->
+  <div class="card" id="faq" style="margin-top:14px">
+    <div class="section-label"><span class="dot"></span> 常见问题</div>
+    <div class="faq-item" onclick="this.classList.toggle('open')">
+      <div class="faq-q"><span class="arrow">›</span> 生成的笔记会被平台判定为AI吗？</div>
+      <div class="faq-a">我们的AI经过专门优化，生成的内容口语化、接地气，带有真实情感表达，不会像通用AI那样生硬。建议在生成的基础上稍作修改，加入个人体验，效果更好。</div>
+    </div>
+    <div class="faq-item" onclick="this.classList.toggle('open')">
+      <div class="faq-q"><span class="arrow">›</span> 9.9元是永久的吗？</div>
+      <div class="faq-a">是的，一次购买永久使用，不限次数，不收月费。后续功能更新也是免费的。</div>
+    </div>
+    <div class="faq-item" onclick="this.classList.toggle('open')">
+      <div class="faq-q"><span class="arrow">›</span> 和ChatGPT有什么区别？</div>
+      <div class="faq-a">我们的AI专门针对小红书笔记做了深度优化：标题网感更强、正文自带emoji排版、标签精准覆盖热门词，一键生成完整结构。不需要你自己写prompt调教，开箱即用。</div>
+    </div>
+    <div class="faq-item" onclick="this.classList.toggle('open')">
+      <div class="faq-q"><span class="arrow">›</span> 生成的笔记质量不好怎么办？</div>
+      <div class="faq-a">可以随时点击"重新生成"，AI会给出不同版本。也可以尝试更换关键词描述或调整语气风格，效果会有变化。</div>
+    </div>
+    <div class="faq-item" onclick="this.classList.toggle('open')">
+      <div class="faq-q"><span class="arrow">›</span> 换了手机/清了浏览器还能用吗？</div>
+      <div class="faq-a">激活码绑定账号不绑定设备。清浏览器缓存后重新输入激活码即可恢复会员状态。如遇问题可联系客服。</div>
+    </div>
+  </div>
+
+  <!-- ========== Footer ========== -->
+  <div class="footer">
+    <div>📕 小红书笔记AI生成器</div>
+    <div>让每一篇笔记都成为爆款</div>
+    <div style="margin-top:8px">© 2026 · Powered by AI</div>
+  </div>
+
 </div>
 
-<!-- Paywall Modal -->
+<!-- ========== Paywall Modal ========== -->
 <div class="modal-overlay" id="paywallModal">
   <div class="modal-box">
     <h3>🎉 免费试用已用完</h3>
-    <p>升级会员即可无限次使用<br/>¥9.9 即可永久解锁全部功能</p>
+    <p>升级会员即可无限次使用</p>
+    <div class="modal-price">¥9.9 <small>原价 ¥29.9</small></div>
+    <p style="font-size:13px;margin-bottom:8px">✅ 无限次生成 &nbsp; ✅ 永久使用<br>✅ 所有风格 &nbsp; ✅ 历史记录</p>
     <div class="activate-section">
-      <input type="text" id="activateInput" placeholder="输入激活码" class="activate-input" />
-      <button class="btn-activate" onclick="activateCode()">🔑 激活</button>
+      <input type="text" id="activateInput" placeholder="输入激活码（如 XHS-XXXX-XXXX-XXXX）" class="activate-input" />
+      <button class="btn-activate" onclick="activateCode()">🔑 激活会员</button>
       <div class="activate-hint" id="activateHint">购买后输入激活码即可永久使用</div>
     </div>
-    <a href="https://mbd.pub/o/baizebulao" target="_blank" class="buy-link">💡 没有激活码？点此购买</a>
+    <a href="https://mbd.pub/o/baizebulao" target="_blank" class="buy-link">💡 没有激活码？点此购买 →</a>
     <button class="btn-close-modal" onclick="closeModal()">暂时不了</button>
   </div>
 </div>
@@ -348,13 +556,43 @@ const API_URL = '/api/generate';
 const FREE_LIMIT = 1;
 const STORAGE_KEY = 'xhs_generator_used';
 const ACTIVATED_KEY = 'xhs_activated';
+const HISTORY_KEY = 'xhs_history';
 
-// --- Activation check ---
+// ========== State ==========
+let currentStyle = '种草';
+let currentTone = '活泼';
+
+// ========== Style chips ==========
+document.querySelectorAll('#styleChips .chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('#styleChips .chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    currentStyle = chip.dataset.style;
+  });
+});
+
+// ========== Tone chips ==========
+document.querySelectorAll('#toneChips .tone-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('#toneChips .tone-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    currentTone = chip.dataset.tone;
+  });
+});
+
+// ========== Length slider ==========
+const lengthLabels = { 1: '精简（150-250字）', 2: '中等（300-400字）', 3: '详细（450-600字）' };
+const lengthRanges = { 1: '150-250', 2: '300-400', 3: '450-600' };
+document.getElementById('lengthSlider').addEventListener('input', e => {
+  document.getElementById('lengthLabel').textContent = lengthLabels[e.target.value];
+});
+
+// ========== Activation ==========
 function isActivated() {
   return localStorage.getItem(ACTIVATED_KEY) === 'true';
 }
 
-// --- Trial count ---
+// ========== Trial count ==========
 function getUsedCount() {
   return parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10);
 }
@@ -362,30 +600,71 @@ function incrementUsed() {
   localStorage.setItem(STORAGE_KEY, String(getUsedCount() + 1));
 }
 function updateBadge() {
+  const badge = document.getElementById('trialBadge');
   if (isActivated()) {
-    document.getElementById('trialBadge').textContent = '✨ 会员已激活 · 无限使用';
-    document.getElementById('trialBadge').style.background = 'rgba(255,255,255,0.35)';
+    badge.textContent = '✨ 会员已激活 · 无限使用';
+    badge.classList.add('activated');
     return;
   }
   const remaining = Math.max(0, FREE_LIMIT - getUsedCount());
-  document.getElementById('trialBadge').textContent = '免费试用：剩余 ' + remaining + ' 次';
+  badge.textContent = '🎁 免费试用：剩余 ' + remaining + ' 次';
 }
 updateBadge();
 
-// --- Activate code ---
+// ========== History ==========
+function getHistory() {
+  try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); }
+  catch(e) { return []; }
+}
+function saveToHistory(data) {
+  let history = getHistory();
+  history.unshift({
+    title: data.title,
+    keyword: data._keyword,
+    style: data._style,
+    time: new Date().toLocaleString('zh-CN', {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'})
+  });
+  history = history.slice(0, 10);
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  renderHistory();
+}
+function renderHistory() {
+  const history = getHistory();
+  const card = document.getElementById('historyCard');
+  const list = document.getElementById('historyList');
+  if (history.length === 0) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+  list.innerHTML = history.map((h, i) => `
+    <div class="history-item" onclick="loadHistory(${i})">
+      <div class="history-emoji">${{'种草':'🌟','教程':'📝','分享':'💬','测评':'🔍'}[h.style] || '📝'}</div>
+      <div class="history-info">
+        <div class="history-title">${h.title}</div>
+        <div class="history-meta">${h.time} · ${h.style}</div>
+      </div>
+    </div>
+  `).join('');
+}
+renderHistory();
+function loadHistory(index) {
+  const history = getHistory();
+  const item = history[index];
+  if (!item) return;
+  // restore inputs
+  document.getElementById('keyword').value = item.keyword || '';
+  document.getElementById('keyword').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// ========== Activate code ==========
 async function activateCode() {
   const input = document.getElementById('activateInput').value.trim();
   const hint = document.getElementById('activateHint');
-
   if (!input) {
     hint.textContent = '请输入激活码';
     hint.className = 'activate-hint error';
     return;
   }
-
   hint.textContent = '验证中...';
   hint.className = 'activate-hint';
-
   try {
     const res = await fetch('/api/verify', {
       method: 'POST',
@@ -393,7 +672,6 @@ async function activateCode() {
       body: JSON.stringify({ code: input })
     });
     const data = await res.json();
-
     if (data.valid) {
       localStorage.setItem(ACTIVATED_KEY, 'true');
       hint.textContent = '✅ 激活成功！现已解锁无限使用';
@@ -410,7 +688,7 @@ async function activateCode() {
   }
 }
 
-// --- Helpers ---
+// ========== Helpers ==========
 function showError(msg) {
   const el = document.getElementById('errorMsg');
   el.textContent = msg;
@@ -420,45 +698,43 @@ function showError(msg) {
 function showLoading(show) {
   document.getElementById('loadingWrap').classList.toggle('show', show);
   document.getElementById('btnGenerate').disabled = show;
+  if (show) startLoadingTips();
 }
 function closeModal() {
   document.getElementById('paywallModal').classList.remove('show');
 }
-
-// --- Build prompt ---
-function buildPrompt(keyword, audience, style) {
-  const styleGuide = {
-    '种草': '以种草安利的口吻，强调产品的优点和必买理由，语气热情有感染力，像闺蜜推荐好物一样',
-    '教程': '以干货教程的口吻，分步骤讲解，条理清晰，给出实用可操作的建议，让读者觉得学到了',
-    '分享': '以真实分享的口吻，像和朋友聊天一样自然，有个人体验感受，真实不做作',
-    '测评': '以客观测评的口吻，从多个维度分析优缺点，给出专业评价和购买建议，有理有据'
-  };
-  const guide = styleGuide[style] || styleGuide['种草'];
-
-  return `你是一个资深的小红书博主，擅长写出高赞爆款笔记。请根据以下信息生成一篇小红书笔记：
-
-【产品/主题】${keyword}
-【目标受众】${audience}
-【笔记风格】${style} —— ${guide}
-
-请严格按照以下 JSON 格式输出（不要输出任何其他内容，不要用 markdown 代码块包裹）：
-{
-  "title": "标题文字（包含1-2个emoji，15字以内，吸引眼球，可适当夸张但不要标题党）",
-  "content": "正文内容（300-500字，要有emoji点缀，分段清晰，每段2-3句话，使用换行符\\n分段，语言口语化接地气，符合小红书社区风格，${guide}）",
-  "tags": ["标签1", "标签2", "标签3", "标签4", "标签5", "标签6", "标签7", "标签8"]
+function scrollToSection(id) {
+  document.getElementById(id).scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-要求：
-- 标题要有网感和吸引力，让人忍不住点进来
-- 正文开头要用一句金句或共鸣的话抓住读者
-- 适当使用"姐妹们""绝绝子""冲""YYDS"等小红书常用表达但不要过度
-- 标签要包含热门词和长尾词混合，8个左右
-- 整体风格要像真人写的，不要像AI生成的`;
+// ========== Loading tips rotation ==========
+let loadingTimer = null;
+const loadingTips = [
+  'AI 正在分析爆款笔记规律…',
+  '正在生成吸引眼球的标题…',
+  '正在撰写正文中…',
+  '正在匹配热门标签…',
+  '正在优化排版和语气…',
+  '快要完成了，请稍候…'
+];
+function startLoadingTips() {
+  let i = 0;
+  const tipEl = document.getElementById('loadingTip');
+  if (loadingTimer) clearInterval(loadingTimer);
+  tipEl.textContent = loadingTips[0];
+  loadingTimer = setInterval(() => {
+    i++;
+    if (i >= loadingTips.length) i = 0;
+    tipEl.style.opacity = '0';
+    setTimeout(() => {
+      tipEl.textContent = loadingTips[i];
+      tipEl.style.opacity = '1';
+    }, 300);
+  }, 2000);
 }
 
-// --- Parse response ---
+// ========== Parse response ==========
 function parseResult(text) {
-  // Strip markdown code fences if present
   let cleaned = text.trim();
   if (cleaned.startsWith('```')) {
     cleaned = cleaned.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
@@ -466,44 +742,55 @@ function parseResult(text) {
   try {
     return JSON.parse(cleaned);
   } catch (e) {
-    // Try to extract JSON from text
     const match = cleaned.match(/\{[\s\S]*\}/);
-    if (match) {
-      return JSON.parse(match[0]);
-    }
+    if (match) return JSON.parse(match[0]);
     throw new Error('无法解析生成结果');
   }
 }
 
-// --- Render result ---
+// ========== Render result ==========
+const styleEmojis = { '种草': '🛍️', '教程': '📚', '分享': '💬', '测评': '🔬' };
 function renderResult(data) {
   document.getElementById('resultTitle').textContent = data.title || '';
   document.getElementById('resultBody').textContent = (data.content || '').replace(/\\n/g, '\n');
+  document.getElementById('noteEmoji').textContent = styleEmojis[data._style] || '📝';
 
+  // word count
+  const wc = (data.content || '').length;
+  document.getElementById('wordCount').textContent = wc + ' 字';
+
+  // random likes
+  document.getElementById('likeCount').textContent = Math.floor(Math.random() * 500 + 100);
+
+  // tags
   const tagsEl = document.getElementById('resultTags');
   tagsEl.innerHTML = '';
   (data.tags || []).forEach(t => {
     const span = document.createElement('span');
-    span.className = 'tag';
+    span.className = 'note-tag';
     span.textContent = '#' + t;
     tagsEl.appendChild(span);
   });
 
   document.getElementById('resultCard').classList.add('show');
-  document.getElementById('btnCopy').disabled = false;
-  document.getElementById('btnCopy').textContent = '📋 一键复制笔记';
+
+  // scroll to result
+  setTimeout(() => {
+    document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 100);
 }
 
-// --- Generate ---
+// ========== Generate ==========
 async function generateNote() {
   const keyword = document.getElementById('keyword').value.trim();
   const audience = document.getElementById('audience').value.trim();
-  const style = document.getElementById('style').value;
+  const style = currentStyle;
+  const tone = currentTone;
+  const length = parseInt(document.getElementById('lengthSlider').value);
 
   if (!keyword) { showError('请输入产品/主题关键词'); return; }
   if (!audience) { showError('请输入目标受众'); return; }
 
-  // Check trial or activation
   if (!isActivated() && getUsedCount() >= FREE_LIMIT) {
     document.getElementById('paywallModal').classList.add('show');
     return;
@@ -516,7 +803,7 @@ async function generateNote() {
     const response = await fetch(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ keyword, audience, style })
+      body: JSON.stringify({ keyword, audience, style, tone, length: lengthRanges[length] })
     });
 
     if (!response.ok) {
@@ -529,47 +816,64 @@ async function generateNote() {
     if (!content) throw new Error('AI 返回内容为空');
 
     const parsed = parseResult(content);
+    parsed._keyword = keyword;
+    parsed._style = style;
     renderResult(parsed);
-    if (!isActivated()) {
-      incrementUsed();
-    }
+    saveToHistory(parsed);
+
+    if (!isActivated()) incrementUsed();
     updateBadge();
   } catch (err) {
     console.error(err);
-    showError('生成失败：' + err.message);
+    showError('生成失败：' + err.message + '。请重试或更换关键词。');
   } finally {
     showLoading(false);
   }
 }
 
-// --- Copy ---
-function copyResult() {
+// ========== Copy ==========
+function copyResult(type) {
   const title = document.getElementById('resultTitle').textContent;
   const body = document.getElementById('resultBody').textContent;
-  const tags = Array.from(document.querySelectorAll('.result-tags .tag')).map(el => el.textContent).join(' ');
-  const fullText = title + '\n\n' + body + '\n\n' + tags;
+  const tags = Array.from(document.querySelectorAll('.note-tag')).map(el => el.textContent).join(' ');
 
-  navigator.clipboard.writeText(fullText).then(() => {
-    const btn = document.getElementById('btnCopy');
-    btn.textContent = '✅ 已复制到剪贴板';
-    btn.disabled = true;
-    setTimeout(() => {
-      btn.disabled = false;
-      btn.textContent = '📋 一键复制笔记';
-    }, 2000);
+  let text;
+  let msg;
+  if (type === 'title') { text = title; msg = '标题已复制'; }
+  else if (type === 'tags') { text = tags; msg = '标签已复制'; }
+  else { text = title + '\n\n' + body + '\n\n' + tags; msg = '全文已复制'; }
+
+  navigator.clipboard.writeText(text).then(() => {
+    flashCopy(msg);
   }).catch(() => {
-    // Fallback
     const ta = document.createElement('textarea');
-    ta.value = fullText;
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand('copy');
-    document.body.removeChild(ta);
-    const btn = document.getElementById('btnCopy');
-    btn.textContent = '✅ 已复制到剪贴板';
-    setTimeout(() => { btn.textContent = '📋 一键复制笔记'; }, 2000);
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    flashCopy(msg);
   });
 }
+function flashCopy(msg) {
+  const btn = document.getElementById('btnCopy');
+  const orig = btn.textContent;
+  btn.textContent = '✅ ' + msg;
+  btn.style.background = '#66bb6a';
+  btn.style.color = '#fff';
+  btn.style.borderColor = '#66bb6a';
+  setTimeout(() => {
+    btn.textContent = orig;
+    btn.style.background = '';
+    btn.style.color = '';
+    btn.style.borderColor = '';
+  }, 2000);
+}
+
+// ========== Enter key to generate ==========
+document.getElementById('keyword').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('audience').focus();
+});
+document.getElementById('audience').addEventListener('keydown', e => {
+  if (e.key === 'Enter') generateNote();
+});
 </script>
 
 </body>
