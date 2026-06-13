@@ -243,6 +243,33 @@ body {
   cursor: pointer;
 }
 
+/* Activate section */
+.activate-section { margin: 16px 0 12px; }
+.activate-input {
+  width: 100%; padding: 10px 14px;
+  border: 1.5px solid #e8e8e8; border-radius: 8px;
+  font-size: 14px; text-align: center; letter-spacing: 1px;
+  outline: none; background: #fafafa; margin-bottom: 8px;
+}
+.activate-input:focus { border-color: #FF2442; background: #fff; }
+.btn-activate {
+  width: 100%; padding: 10px;
+  background: linear-gradient(135deg, #FF2442, #FF6B81);
+  color: #fff; border: none; border-radius: 8px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.btn-activate:active { transform: scale(0.98); }
+.activate-hint {
+  font-size: 12px; color: #999; margin-top: 6px; text-align: center;
+}
+.activate-hint.error { color: #FF2442; }
+.activate-hint.success { color: #66bb6a; }
+.buy-link {
+  display: block; text-align: center; color: #4fc3f7;
+  font-size: 13px; text-decoration: none; margin-bottom: 12px;
+}
+.buy-link:hover { text-decoration: underline; }
+
 /* Error */
 .error-msg {
   display: none;
@@ -305,8 +332,13 @@ body {
 <div class="modal-overlay" id="paywallModal">
   <div class="modal-box">
     <h3>🎉 免费试用已用完</h3>
-    <p>您已体验了AI笔记生成功能<br/>升级会员即可无限次使用，解锁更多风格模板！</p>
-    <button class="btn-upgrade" onclick="alert('请联系客服开通会员')">💎 立即升级会员</button>
+    <p>升级会员即可无限次使用<br/>¥9.9 即可永久解锁全部功能</p>
+    <div class="activate-section">
+      <input type="text" id="activateInput" placeholder="输入激活码" class="activate-input" />
+      <button class="btn-activate" onclick="activateCode()">🔑 激活</button>
+      <div class="activate-hint" id="activateHint">购买后输入激活码即可永久使用</div>
+    </div>
+    <a href="https://mbd.pub/o/baizebulao" target="_blank" class="buy-link">💡 没有激活码？点此购买</a>
     <button class="btn-close-modal" onclick="closeModal()">暂时不了</button>
   </div>
 </div>
@@ -315,6 +347,12 @@ body {
 const API_URL = '/api/generate';
 const FREE_LIMIT = 1;
 const STORAGE_KEY = 'xhs_generator_used';
+const ACTIVATED_KEY = 'xhs_activated';
+
+// --- Activation check ---
+function isActivated() {
+  return localStorage.getItem(ACTIVATED_KEY) === 'true';
+}
 
 // --- Trial count ---
 function getUsedCount() {
@@ -324,10 +362,53 @@ function incrementUsed() {
   localStorage.setItem(STORAGE_KEY, String(getUsedCount() + 1));
 }
 function updateBadge() {
+  if (isActivated()) {
+    document.getElementById('trialBadge').textContent = '✨ 会员已激活 · 无限使用';
+    document.getElementById('trialBadge').style.background = 'rgba(255,255,255,0.35)';
+    return;
+  }
   const remaining = Math.max(0, FREE_LIMIT - getUsedCount());
   document.getElementById('trialBadge').textContent = '免费试用：剩余 ' + remaining + ' 次';
 }
 updateBadge();
+
+// --- Activate code ---
+async function activateCode() {
+  const input = document.getElementById('activateInput').value.trim();
+  const hint = document.getElementById('activateHint');
+
+  if (!input) {
+    hint.textContent = '请输入激活码';
+    hint.className = 'activate-hint error';
+    return;
+  }
+
+  hint.textContent = '验证中...';
+  hint.className = 'activate-hint';
+
+  try {
+    const res = await fetch('/api/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: input })
+    });
+    const data = await res.json();
+
+    if (data.valid) {
+      localStorage.setItem(ACTIVATED_KEY, 'true');
+      hint.textContent = '✅ 激活成功！现已解锁无限使用';
+      hint.className = 'activate-hint success';
+      updateBadge();
+      setTimeout(() => closeModal(), 1500);
+    } else {
+      hint.textContent = data.error || '激活码无效';
+      hint.className = 'activate-hint error';
+    }
+  } catch (err) {
+    hint.textContent = '网络错误，请重试';
+    hint.className = 'activate-hint error';
+  }
+}
 
 // --- Helpers ---
 function showError(msg) {
@@ -422,8 +503,8 @@ async function generateNote() {
   if (!keyword) { showError('请输入产品/主题关键词'); return; }
   if (!audience) { showError('请输入目标受众'); return; }
 
-  // Check trial
-  if (getUsedCount() >= FREE_LIMIT) {
+  // Check trial or activation
+  if (!isActivated() && getUsedCount() >= FREE_LIMIT) {
     document.getElementById('paywallModal').classList.add('show');
     return;
   }
@@ -449,7 +530,9 @@ async function generateNote() {
 
     const parsed = parseResult(content);
     renderResult(parsed);
-    incrementUsed();
+    if (!isActivated()) {
+      incrementUsed();
+    }
     updateBadge();
   } catch (err) {
     console.error(err);
