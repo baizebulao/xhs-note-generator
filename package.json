@@ -1,0 +1,10 @@
+{
+  "name": "xhs-note-generator",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI小红书笔记生成器",
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "dependencies": {}
+}
