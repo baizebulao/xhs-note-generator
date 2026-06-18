@@ -40,6 +40,14 @@ export default async function handler(req, res) {
   }
   attempts.count++;
 
+  // VIP 通用密码（面包多自动发货用）
+  const VIP_CODE = 'MBD-XHS-2026VIP-7K9X';
+
+  // VIP 密码直接通过
+  if (normalized === VIP_CODE) {
+    return res.status(200).json({ valid: true, message: 'VIP 激活成功' });
+  }
+
   // 验证：SHA-256 比对
   const crypto = await import('crypto');
   const hash = crypto.createHash('sha256').update(normalized).digest('hex');
